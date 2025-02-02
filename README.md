@@ -5,5 +5,5 @@
 2. Add the callsigns you want to generate a mailing list for to ``callsigns.txt``, one callsign per line.
 3. Run the script, it will read each callsign and output data to hams.csv. There is a 100msec delay per request to avoid hammering the QRZ servers.
 
-Thanks to K8VSY for his telegram bot script https://gitlab.com/vyano/pytelehambot
+Thanks to K8VSY for their telegram bot script https://gitlab.com/vyano/pytelehambot
 
