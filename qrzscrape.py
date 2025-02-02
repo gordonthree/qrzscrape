@@ -4,13 +4,16 @@
 # Copyright 2023, K8VSY, https://k8vsy.radio/
 # Licensed under the Eiffel Forum License 2.
 
+# Copyright 2025, K8DIY, https://www.qrz.com/db/k8diy
+# Thanks to K8VSY for their telegram qrz bot script
 
 import requests
 import xmltodict
 import time
 import csv
-import re  # Import the regular expression module
+import re
 
+# create a gloabl session object
 session = requests.session()
 
 def get_qrz_creds():
@@ -47,6 +50,10 @@ def get_qrz_creds():
     return qrz_username, qrz_password
 
 def qrz_sessionkey(session):
+    '''
+    Open a session with the QRZ database,
+    save the session key for reuse
+    '''
     qrz_username, qrz_password = get_qrz_creds()
     if not qrz_username or not qrz_password:  # Simplified condition
         print('Cannot log into QRZ')
@@ -73,6 +80,10 @@ def qrz_sessionkey(session):
 
 
 def qrz_lookup(session, session_key, callsign):
+    '''
+    Query the QRZ database, get an XML object with data about the provided callsign
+    '''
+
     url = f"https://xmldata.qrz.com/xml/current/?s={session_key}&callsign={callsign}" # f-string formatting
     try:
         r = session.get(url)
@@ -88,7 +99,10 @@ def qrz_lookup(session, session_key, callsign):
         return None
 
 def cleanup_value(value):
-    """Removes commas, newlines, and other problematic characters from a string."""
+    '''
+    Clean up text strings, remove commas, new lines, etc. also handle empty strings gracefully
+    '''
+
     if value is None:  # Handle None values gracefully
         return "none"
     value = str(value)  # Ensure it's a string
@@ -97,7 +111,7 @@ def cleanup_value(value):
 
 def lookup_call(session, session_key, callsign):
     '''
-    look up a given callsign via QRZ; and pretty-print the output
+    look up a given callsign via QRZ and save the output to CSV file
     '''
 
     # print(f'Input: {callsign[:15]}')  # f-string formatting
@@ -112,11 +126,10 @@ def lookup_call(session, session_key, callsign):
         return None
 
     message = ""
-    #fields = ['call', 'fname', 'name', 'email', 'class', 'addr1', 'addr2', 'state', 'efdate', 'expdate']
     for field in fields:
         value = outs.get(field)
         cleaned_value = cleanup_value(value)  # Clean the value
-        message += cleaned_value + "," if field != 'expdate' else cleaned_value # Add cleaned value
+        message += cleaned_value + "," if field != 'expdate' else cleaned_value # Add cleaned value, expdate should be the last field
     return message
 
 
@@ -127,6 +140,8 @@ if session_key is None:
     print("Failed to obtain session key. Exiting.")
     exit(1)  # Exit with an error code if the session can't be established
 
+# these field names come from the QRZ XML format, see their website for a full list of fields
+# expdate should be the last field
 fields = ['call', 'fname', 'name', 'email', 'class', 'addr1', 'addr2', 'state', 'zip', 'efdate', 'expdate']  # Define fields *once*
 
 with open("callsigns.txt", "r") as f, open("hams.csv", "w", newline="") as out:
@@ -142,5 +157,3 @@ with open("callsigns.txt", "r") as f, open("hams.csv", "w", newline="") as out:
         time.sleep(0.1)
 
 print("Done")
-
-    
